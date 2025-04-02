@@ -5,6 +5,7 @@ import os  # Для работы с файловой системой
 import time  # Для работы с временными метками
 import tkinter as tk  # Для создания графического интерфейса
 from openai import OpenAI  # Для работы с OpenRouter API
+import json  # Для работы с JSON
 
 # Укажите путь к исполняемому файлу Tesseract, если он не добавлен в PATH
 pytesseract.pytesseract.tesseract_cmd = r"C:\\program Files\\Tesseract-OCR\\tesseract.exe"
@@ -14,12 +15,12 @@ output_folder = "screenshots"
 os.makedirs(output_folder, exist_ok=True)
 
 # Ваш API-ключ OpenRouter
-#OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 
 # Создаем клиент OpenAI для работы с OpenRouter API
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key="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",
+    api_key="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",
 )
 
 def capture_area():
@@ -94,21 +95,26 @@ def process_with_openrouter(text):
     if not text.strip():
         print("Ошибка: текст для обработки пустой.")
         return "Текст для обработки пустой."
+    
     try:
         print("Отправка запроса в OpenRouter API...")
         completion = client.chat.completions.create(
-            #
+            extra_headers={
+                "HTTP-Referer": "https://example.com",  # Optional. Site URL for rankings on openrouter.ai.
+                "X-Title": "Image Analysis App",  # Optional. Site title for rankings on openrouter.ai.
+            },
             extra_body={},
-            model="deepseek/deepseek-v3-base:free",
+            model="qwen/qwen2.5-vl-3b-instruct:free",
             messages=[
                 {
                     "role": "user",
-                    "content": str(text)
+                    "content": [{"type": "text", "text": text}]
                 }
-            ]
+            ],
         )
         print("Запрос успешно выполнен.")
-        print("Полный ответ от API:", completion)
+        print()
+        #print("Полный ответ от API:", completion)
         return completion.choices[0].message.content
     except Exception as e:
         print(f"Ошибка при обращении к OpenRouter API: {e}")
